@@ -1,0 +1,22 @@
+<?php
+return [
+    'app.name'         => 'Question — Answer',
+    'menu.title'       => 'Menu',
+    'menu.close'       => 'Close',
+    'menu.ask'         => 'Ask',
+    'menu.answer'      => 'Answer',
+    'menu.tasks'       => 'Tasks',
+    'menu.customer'    => 'Customer',
+    'menu.executor'    => 'Executor',
+    'menu.appearance'  => 'Appearance',
+    'menu.language'    => 'Language',
+    'menu.login'       => 'Sign in',
+    'theme.dark'       => 'Dark theme',
+    'theme.light'      => 'Light theme',
+    'footer.line1'     => 'Live answers from real people.',
+    'footer.line2'     => 'Unanswered questions are deleted after 24 hours.',
+    'time.s'           => 's',
+    'time.m'           => 'm',
+    'time.h'           => 'h',
+    'time.d'           => 'd',
+];
