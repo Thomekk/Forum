@@ -1,0 +1,22 @@
+<?php
+return [
+    'app.name'         => 'Вопрос → Ответ',
+    'menu.title'       => 'Меню',
+    'menu.close'       => 'Закрыть',
+    'menu.ask'         => 'Спросить',
+    'menu.answer'      => 'Ответить',
+    'menu.tasks'       => 'Задания',
+    'menu.customer'    => 'Заказчик',
+    'menu.executor'    => 'Исполнитель',
+    'menu.appearance'  => 'Оформление',
+    'menu.language'    => 'Язык',
+    'menu.login'       => 'Войти',
+    'theme.dark'       => 'Тёмная тема',
+    'theme.light'      => 'Светлая тема',
+    'footer.line1'     => 'Живые ответы от людей.',
+    'footer.line2'     => 'Без ответа вопрос удаляется через 24 часа.',
+    'time.s'           => 'с',
+    'time.m'           => 'м',
+    'time.h'           => 'ч',
+    'time.d'           => 'д',
+];
