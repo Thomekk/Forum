@@ -1,0 +1,54 @@
+# Время жизни не авторизованного вопроса без ответа 15 мин
+NOT_AUTHORIZED_UNANSWERED_QUESTION_TTL=900
+
+# Время жизни не авторизованного вопроса с ответом
+
+
+# Время жизни авторизованного вопроса без ответа 1 час
+AUTHORIZED_UNANSWERED_QUESTION_TTL=3600
+
+# Время жизни авторизованного вопроса с ответом
+
+
+
+# Не авторизован количество символов в вопросе
+NOT_AUTHORIZED_CHARACTERS_QUESTION=1000
+
+# Авторизован количество символов в вопросе
+AUTHORIZED_CHARACTERS_QUESTION=10000
+
+
+## Подписки:
+
+# Цена тестовой подписки
+TRIAL_SUBSCRIPTION_PRICE_RUB=10.00
+TRIAL_SUBSCRIPTION_PRICE_USD=0.10
+TRIAL_SUBSCRIPTION_PRICE_EUR=0.10
+
+# Цена ПРО подписки
+PRO_SUBSCRIPTION_PRICE_RUB=10.00
+PRO_SUBSCRIPTION_PRICE_USD=1.00
+PRO_SUBSCRIPTION_PRICE_EUR=1.00
+
+# Срок тестовой подписки дней
+TRIAL_SUBSCRIPTION_PERIOD=1
+
+# Срок ПРО подписки
+PRO_SUBSCRIPTION_PERIOD=30
+
+
+
+
+
+
+PRODUCT_PRICE_USD=49.99
+DISCOUNT_PERCENT=15
+
+
+# Тайминги (в секундах или минутах)
+CACHE_TTL_SECONDS=3600
+SESSION_TIMEOUT_MINUTES=30
+
+# Флаги активации (true/false)
+ENABLE_REGISTRATION=true
+ENABLE_MAINTENANCE_MODE=false
