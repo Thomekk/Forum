@@ -43,7 +43,7 @@ public final class YggNodeService extends Service {
     private Yggchat.Session node;
     private ScheduledExecutorService worker;
     private final Map<String, String> peers = new LinkedHashMap<>(); // code -> YggChat peer id
-    private volatile String status = "Starting Yggdrasil…";
+    private volatile String status = "status_starting";
     private volatile String myCode = "";
     private volatile String configJson = "{}";
     private volatile boolean starting;
@@ -73,7 +73,8 @@ public final class YggNodeService extends Service {
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(NOTIFICATION_ID, notification(status));
+        createNotificationChannel();
+        startForeground(NOTIFICATION_ID, notification(statusText()));
         if (intent == null || ACTION_START.equals(intent.getAction()) || ACTION_SYNC.equals(intent.getAction())) {
             ensurePolling();
         } else if (ACTION_ADD_PEER.equals(intent.getAction())) {
@@ -100,7 +101,7 @@ public final class YggNodeService extends Service {
                 if (node != null && node.isStarted()) pollAndSend();
             } catch (Throwable error) {
                 Log.w(TAG, "Yggdrasil sync cycle failed", error);
-                status = "Network temporarily unavailable";
+                status = "status_temp_unavailable";
                 broadcastStatus();
             }
         }, 0, POLL_SECONDS, TimeUnit.SECONDS);
@@ -108,7 +109,7 @@ public final class YggNodeService extends Service {
 
     private void startNodeInternal() {
         if (node != null) return;
-        status = "Starting Yggdrasil…";
+        status = "status_starting";
         broadcastStatus();
         try {
             node = Yggchat.Session.open(getApplicationContext());
@@ -116,13 +117,13 @@ public final class YggNodeService extends Service {
             configJson = memoryConfig(safe(node.configJson()));
             forum.setMyCode(myCode);
             restorePeers();
-            status = "Yggdrasil node running";
+            status = "status_node_running";
             broadcastStatus();
         } catch (Throwable error) {
             node = null;
             status = error instanceof UnsatisfiedLinkError
-                    ? "Native YggChat core unavailable on this device"
-                    : "Yggdrasil node could not start";
+                    ? "status_no_core"
+                    : "status_start_failed";
             Log.e(TAG, "Cannot start bundled YggChat core", error);
             broadcastStatus();
         }
@@ -132,7 +133,7 @@ public final class YggNodeService extends Service {
         for (String code : forum.peerCodes()) {
             if (peers.containsKey(code)) continue;
             try {
-                String peer = safe(node.addContactCode(code, "Forum peer"));
+                String peer = safe(node.addContactCode(code, Strings.text(this, "forum_peer")));
                 if (!peer.isEmpty()) peers.put(code, peer);
             } catch (Throwable error) {
                 Log.w(TAG, "Saved contact code rejected", error);
@@ -148,23 +149,23 @@ public final class YggNodeService extends Service {
             if (node == null) {
                 // Keep the user-entered code; the periodic retry can attach it after the core starts.
                 forum.addPeerCode(code);
-                status = "Contact saved; waiting for the node";
+                status = "status_contact_waiting";
                 broadcastStatus();
                 return;
             }
-            String peer = safe(node.addContactCode(code, "Forum peer"));
+            String peer = safe(node.addContactCode(code, Strings.text(this, "forum_peer")));
             if (peer.isEmpty()) throw new IllegalArgumentException("YggChat returned an empty peer id");
             forum.addPeerCode(code);
             peers.put(code, peer);
-            status = "Peer added";
+            status = "status_peer_added";
             broadcastStatus();
             pollAndSend();
         } catch (ForumCore.RuleException error) {
-            status = "Invalid or duplicate peer code";
+            status = "status_peer_invalid";
             broadcastStatus();
         } catch (Throwable error) {
             Log.w(TAG, "Could not add YggChat contact", error);
-            status = "Could not add this peer code";
+            status = "status_peer_add_failed";
             broadcastStatus();
         }
     }
@@ -201,7 +202,7 @@ public final class YggNodeService extends Service {
                 if ("direct".equals(pending.route)) {
                     String target = pending.target.trim();
                     if (!target.isEmpty()) {
-                        String peerId = safe(node.addContactCode(target, "Anonymous asker"));
+                        String peerId = safe(node.addContactCode(target, Strings.text(this, "anonymous_asker")));
                         if (!peerId.isEmpty()) {
                             node.send(peerId, pending.event.toString());
                             sent = true;
@@ -228,7 +229,7 @@ public final class YggNodeService extends Service {
         }
 
         if (changed) forum.expireNow();
-        status = peers.isEmpty() ? "Node running · add a forum peer" : "Yggdrasil node running";
+        status = peers.isEmpty() ? "status_node_add_peer" : "status_node_running";
         try { configJson = memoryConfig(safe(node.configJson())); } catch (Throwable ignored) { }
         broadcastStatus();
     }
@@ -238,34 +239,36 @@ public final class YggNodeService extends Service {
         if (node != null) {
             try {
                 node.purgeVault();
-                status = "Local shard cache purged";
+                status = "status_cache_purged";
             } catch (Throwable error) {
-                status = "Could not purge shard cache";
+                status = "status_purge_failed";
                 Log.w(TAG, "Vault purge failed", error);
             }
         }
         broadcastStatus();
     }
 
+    private String statusText() { return Strings.text(this, status); }
+
     private void broadcastStatus() {
         Intent intent = new Intent(ACTION_STATUS).setPackage(getPackageName());
         boolean online = false;
         try { online = node != null && node.isStarted(); } catch (Throwable ignored) { }
         intent.putExtra("online", online);
-        intent.putExtra("status", status);
+        intent.putExtra("status", statusText());
         intent.putExtra("myCode", myCode);
         intent.putExtra("peerCount", peers.size());
         intent.putExtra("pendingCount", forum == null ? 0 : forum.pendingCount());
         intent.putExtra("configJson", configJson);
         intent.putExtra("coreVersion", Yggchat.CoreVersion);
         sendBroadcast(intent);
-        updateForegroundNotification(status);
+        updateForegroundNotification();
     }
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Forum network", NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription("Keeps the Yggdrasil forum node available for peer-to-peer sync");
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, Strings.text(this, "channel_title"), NotificationManager.IMPORTANCE_LOW);
+            channel.setDescription(Strings.text(this, "channel_description"));
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) manager.createNotificationChannel(channel);
         }
@@ -280,18 +283,18 @@ public final class YggNodeService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder builder = Build.VERSION.SDK_INT >= 26
                 ? new Notification.Builder(this, CHANNEL_ID) : new Notification.Builder(this);
-        builder.setContentTitle("Anonymous Forum · Yggdrasil")
+        builder.setContentTitle(Strings.text(this, "notification_title"))
                 .setContentText(text)
                 .setSmallIcon(android.R.drawable.stat_sys_upload_done)
                 .setContentIntent(content)
                 .setOngoing(true)
-                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopAction);
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, Strings.text(this, "notification_stop"), stopAction);
         return builder.build();
     }
 
-    private void updateForegroundNotification(String text) {
+    private void updateForegroundNotification() {
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (manager != null) manager.notify(NOTIFICATION_ID, notification(text));
+        if (manager != null) manager.notify(NOTIFICATION_ID, notification(statusText()));
     }
 
     private String memoryConfig(String value) {

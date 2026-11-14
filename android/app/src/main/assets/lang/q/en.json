@@ -1,0 +1,9 @@
+{
+  "q_welcome": "Ask people your question",
+  "q_description": "Real opinions and experience",
+  "q_placeholder": "Your question…",
+  "send": "Send",
+  "question_posted": "Question saved. It will sync when a peer is reachable.",
+  "q_hint": "Unanswered questions are deleted after 24 hours",
+  "write_first": "Write a question first."
+}

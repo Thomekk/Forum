@@ -1,0 +1,11 @@
+{
+  "memory": "Holographic shard storage",
+  "memory_hint": "YggChat splits and redundantly distributes messages; shards expire according to the node vault policy.",
+  "shard_size": "Shard size",
+  "redundancy": "Redundancy",
+  "fanout": "Fan-out",
+  "vault": "Vault limit",
+  "ttl": "Shard retention",
+  "purge": "Purge local shard cache",
+  "purge_confirm": "Remove this node's cached shards? Forum questions stored locally will remain."
+}

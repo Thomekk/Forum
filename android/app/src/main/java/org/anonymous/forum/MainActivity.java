@@ -65,7 +65,7 @@ public final class MainActivity extends Activity {
     private String questionDraft = "";
     private String answerDraft = "";
     private String language;
-    private String networkStatus = "Starting Yggdrasil…";
+    private String networkStatus = "";
     private String myCode = "";
     private String configJson = "{}";
     private int peerCount;
@@ -111,6 +111,7 @@ public final class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         forum = new ForumCore(this);
         language = Strings.effectiveLanguage(this);
+        networkStatus = Strings.text(language, "status_starting");
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         applyPalette();
         setContentView(buildRoot());
@@ -228,7 +229,9 @@ public final class MainActivity extends Activity {
         network.setOnClickListener(v -> { page = PAGE_SETTINGS; render(); });
         bar.addView(network, new LinearLayout.LayoutParams(dp(30), dp(40)));
         ForumCore.Wallet wallet = forum.wallet();
-        String creditText = wallet.freeQuestionsRemaining > 0 ? "1 free · " + wallet.credits : "" + wallet.credits + " cr";
+        String creditText = wallet.freeQuestionsRemaining > 0
+                ? Strings.text(language, "credit_badge_free") + " · " + wallet.credits
+                : wallet.credits + " " + Strings.text(language, "credit_badge");
         TextView credits = label("◈ " + creditText, 12, accent, true);
         credits.setGravity(Gravity.CENTER);
         credits.setPadding(dp(8), dp(5), dp(8), dp(5));
@@ -365,7 +368,7 @@ public final class MainActivity extends Activity {
             render();
         } catch (ForumCore.RuleException error) {
             if ("NO_CREDITS".equals(error.code)) toast(Strings.text(language, "no_credits"));
-            else toast("Write a question first.");
+            else toast(Strings.text(language, "write_first"));
         }
     }
 
@@ -595,7 +598,7 @@ public final class MainActivity extends Activity {
             expired.setPadding(0, dp(18), 0, dp(18));
             content.addView(expired);
         } else {
-            TextView earn = label("1 answer = 1 question credit", 12, accent, true);
+            TextView earn = label(Strings.text(language, "earn_credit"), 12, accent, true);
             LinearLayout.LayoutParams earnParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             earnParams.setMargins(0, dp(14), 0, dp(8));
             content.addView(earn, earnParams);
@@ -668,6 +671,7 @@ public final class MainActivity extends Activity {
             render();
         } catch (ForumCore.RuleException error) {
             switch (error.code) {
+                case "EMPTY_ANSWER": toast(Strings.text(language, "write_answer_first")); break;
                 case "NO_REPLY_ROUTE": toast(Strings.text(language, "no_reply_route")); break;
                 case "ALREADY_ANSWERED": toast(Strings.text(language, "your_answer")); break;
                 case "EXPIRED": toast(Strings.text(language, "expired")); break;
@@ -825,6 +829,7 @@ public final class MainActivity extends Activity {
                 .setSingleChoiceItems(names, checked, (dialog, which) -> {
                     Strings.setLanguagePreference(this, languages.get(which).code);
                     language = Strings.effectiveLanguage(this);
+                    YggNodeService.sync(this);
                     dialog.dismiss();
                     refreshDrawer();
                     render();
@@ -853,7 +858,7 @@ public final class MainActivity extends Activity {
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String value = code.getText().toString().trim();
             if (value.length() < 8 || value.length() > 4096) {
-                toast("Invalid contact code");
+                toast(Strings.text(language, "invalid_contact"));
                 return;
             }
             YggNodeService.addPeer(this, value);

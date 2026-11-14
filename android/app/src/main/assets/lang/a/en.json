@@ -1,0 +1,13 @@
+{
+  "a_placeholder": "Your answer…",
+  "back": "Back",
+  "answer_posted": "Answer queued privately for the asker. +1 question credit.",
+  "no_reply_route": "This question has no usable reply code. Ask the question author to refresh their node code.",
+  "answer_private": "Answers are private: only the question author can read them.",
+  "waiting": "Waiting for anonymous answers…",
+  "your_question": "Your question",
+  "your_answer": "You already answered this question",
+  "expired": "This unanswered question has expired",
+  "earn_credit": "1 answer = 1 question credit",
+  "write_answer_first": "Write an answer first."
+}

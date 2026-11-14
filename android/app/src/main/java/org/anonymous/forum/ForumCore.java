@@ -40,6 +40,7 @@ public final class ForumCore {
     private final SharedPreferences prefs;
 
     public ForumCore(Context context) {
+        Strings.initialize(context);
         prefs = context.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
@@ -126,7 +127,7 @@ public final class ForumCore {
 
     public Question postQuestion(String rawText, String topicId, String subtopicId) throws RuleException {
         String text = clean(rawText, QUESTION_LIMIT);
-        if (text.isEmpty()) throw new RuleException("Write a question first.");
+        if (text.isEmpty()) throw new RuleException("EMPTY_QUESTION");
         if (!Strings.validTopic(topicId)) topicId = "all";
         String sub = validSubtopic(topicId, subtopicId) ? subtopicId : "";
         long now = System.currentTimeMillis();
@@ -206,7 +207,7 @@ public final class ForumCore {
     /** Create a private answer plus a body-free public answer count event. */
     public void answer(String questionId, String rawText) throws RuleException {
         String text = clean(rawText, ANSWER_LIMIT);
-        if (text.isEmpty()) throw new RuleException("Write an answer first.");
+        if (text.isEmpty()) throw new RuleException("EMPTY_ANSWER");
         long now = System.currentTimeMillis();
         synchronized (LOCK) {
             JSONObject root = read();

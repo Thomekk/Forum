@@ -76,7 +76,17 @@
 |   |   |__ MainActivity.java       # Q&A, лента, детали, настройки, боковая панель.
 |   |   |__ ForumCore.java          # Локальная модель, лимит/кредиты, TTL, outbox и dedup.
 |   |   |__ YggNodeService.java     # Foreground Yggdrasil service и gossip-синхронизация.
-|   |   |__ Strings.java            # Языки, автоопределение, темы/подтемы.
+|   |   |__ Strings.java            # Загрузка языков/разделов JSON, автоопределение, темы/подтемы.
+|   |__ app/src/main/assets/lang/
+|   |   |__ languages.json          # Список языковых кодов и названий.
+|   |   |__ _common/{code}.json     # Общие строки интерфейса.
+|   |   |__ q/{code}.json           # Экран вопроса; как lang/q веб-версии.
+|   |   |__ l/{code}.json           # Лента/список; как lang/l веб-версии.
+|   |   |__ a/{code}.json           # Ответ/детали; как lang/a веб-версии.
+|   |   |__ settings/{code}.json
+|   |   |__ network/{code}.json
+|   |   |__ memory/{code}.json
+|   |   |__ topics/{code}.json     # Настройки Android и переводы тем.
 |   |__ app/src/main/java/net/yggchat/yggchat/Yggchat.java
 |   |                                # JNI-совместимые обёртки из YggChat 0.2.0.
 |   |__ app/src/main/java/go/       # Go-mobile Seq/Universe JNI-runtime compatibility.
