@@ -7,15 +7,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 
 /**
@@ -78,7 +79,12 @@ public final class ForumCore {
                     if (value != null) result.add(new Question(value));
                 }
             }
-            result.sort(Comparator.comparingLong((Question q) -> q.createdAt).reversed());
+            Collections.sort(result, new Comparator<Question>() {
+                @Override public int compare(Question left, Question right) {
+                    if (left.createdAt == right.createdAt) return 0;
+                    return left.createdAt < right.createdAt ? 1 : -1;
+                }
+            });
             return Collections.unmodifiableList(result);
         }
     }
@@ -431,7 +437,9 @@ public final class ForumCore {
     }
 
     private static void resetDailyQuota(JSONObject root) {
-        String today = LocalDate.now(ZoneOffset.UTC).toString();
+        SimpleDateFormat utcDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        utcDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String today = utcDate.format(new Date());
         if (!today.equals(root.optString("freeDate", ""))) {
             put(root, "freeDate", today);
             put(root, "freeUsed", false);
@@ -650,7 +658,12 @@ public final class ForumCore {
                 JSONObject answer = stored.optJSONObject(i);
                 if (answer != null) items.add(new Answer(answer));
             }
-            items.sort(Comparator.comparingLong((Answer a) -> a.createdAt));
+            Collections.sort(items, new Comparator<Answer>() {
+                @Override public int compare(Answer left, Answer right) {
+                    if (left.createdAt == right.createdAt) return 0;
+                    return left.createdAt < right.createdAt ? -1 : 1;
+                }
+            });
             answers = Collections.unmodifiableList(items);
         }
     }
