@@ -68,3 +68,22 @@
 
 ------------------------------------------------------------
 ------------------------------------------------------------
+
+---------------- ANDROID-ПОРТ (Java, android/) ----------------
+
+|__ android/                       # Самостоятельный Gradle-проект; PHP остаётся веб-макетом.
+|   |__ app/src/main/java/org/anonymous/forum/
+|   |   |__ MainActivity.java       # Q&A, лента, детали, настройки, боковая панель.
+|   |   |__ ForumCore.java          # Локальная модель, лимит/кредиты, TTL, outbox и dedup.
+|   |   |__ YggNodeService.java     # Foreground Yggdrasil service и gossip-синхронизация.
+|   |   |__ Strings.java            # Языки, автоопределение, темы/подтемы.
+|   |__ app/src/main/java/net/yggchat/yggchat/Yggchat.java
+|   |                                # JNI-совместимые обёртки из YggChat 0.2.0.
+|   |__ app/src/main/java/go/       # Go-mobile Seq/Universe JNI-runtime compatibility.
+|   |__ app/src/main/jniLibs/arm64-v8a/libgojni.so
+|   |                                # YggChat/Yggdrasil native core из APK в корне.
+|   |__ app/src/main/AndroidManifest.xml
+|   |__ app/build.gradle.kts        # Android API 26+, arm64-v8a, Java 17.
+|   |__ gradlew, gradle/wrapper/    # Gradle wrapper 8.9.
+
+Android-границы: UI и локальная Q&A-логика не зависят от JNI; при отсутствии ядра приложение остаётся в offline-режиме. Публичные вопросы и уведомления о ответах разносятся по сохранённым YggChat-контактам; содержимое ответа отправляется приватно автору. Первое подключение требует обмена кодами контактов — Yggdrasil bootstrap peers сами по себе не являются участниками форума. Квота/кредиты пока локальны и не защищены от Sybil-сброса.

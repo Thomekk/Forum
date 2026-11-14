@@ -1,0 +1,10 @@
+# Local credentials and IDE/build output
+.env
+local.properties
+.gradle/
+**/.gradle/
+**/build/
+.idea/
+*.iml
+.DS_Store
+artifacts/
