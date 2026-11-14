@@ -68,3 +68,32 @@
 
 ------------------------------------------------------------
 ------------------------------------------------------------
+
+---------------- ANDROID-ПОРТ (Java, android/) ----------------
+
+|__ android/                       # Самостоятельный Gradle-проект; PHP остаётся веб-макетом.
+|   |__ app/src/main/java/org/anonymous/forum/
+|   |   |__ MainActivity.java       # Q&A, лента, детали, настройки, боковая панель.
+|   |   |__ ForumCore.java          # Локальная модель, лимит/кредиты, TTL, outbox и dedup.
+|   |   |__ YggNodeService.java     # Foreground Yggdrasil service и gossip-синхронизация.
+|   |   |__ Strings.java            # Загрузка языков/разделов JSON, автоопределение, темы/подтемы.
+|   |__ app/src/main/assets/lang/
+|   |   |__ languages.json          # Список языковых кодов и названий.
+|   |   |__ _common/{code}.json     # Общие строки интерфейса.
+|   |   |__ q/{code}.json           # Экран вопроса; как lang/q веб-версии.
+|   |   |__ l/{code}.json           # Лента/список; как lang/l веб-версии.
+|   |   |__ a/{code}.json           # Ответ/детали; как lang/a веб-версии.
+|   |   |__ settings/{code}.json
+|   |   |__ network/{code}.json
+|   |   |__ memory/{code}.json
+|   |   |__ topics/{code}.json     # Настройки Android и переводы тем.
+|   |__ app/src/main/java/net/yggchat/yggchat/Yggchat.java
+|   |                                # JNI-совместимые обёртки из YggChat 0.2.0.
+|   |__ app/src/main/java/go/       # Go-mobile Seq/Universe JNI-runtime compatibility.
+|   |__ app/src/main/jniLibs/arm64-v8a/libgojni.so
+|   |                                # YggChat/Yggdrasil native core из APK в корне.
+|   |__ app/src/main/AndroidManifest.xml
+|   |__ app/build.gradle.kts        # Android API 21+, arm64-v8a, Java 17.
+|   |__ gradlew, gradle/wrapper/    # Gradle wrapper 8.9.
+
+Android-границы: минимальная ОС — Android 5.0 / API 21; UI и локальная Q&A-логика не зависят от JNI и остаются в offline-режиме при ошибке загрузки ядра. Сетевой режим доступен только на 64-битном ARM (`arm64-v8a`); 32-битные ARM и x86 требуют отдельной нативной сборки. Публичные вопросы и уведомления о ответах разносятся по сохранённым YggChat-контактам; содержимое ответа отправляется приватно автору. Первое подключение требует обмена кодами контактов — Yggdrasil bootstrap peers сами по себе не являются участниками форума. Квота/кредиты пока локальны и не защищены от Sybil-сброса.

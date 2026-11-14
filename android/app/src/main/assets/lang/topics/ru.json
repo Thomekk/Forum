@@ -1,0 +1,19 @@
+{
+  "topic.all": "Все",
+  "topic.programming": "Программирование",
+  "subtopic.programming.bugs": "Поиск ошибок",
+  "subtopic.programming.review": "Код-ревью",
+  "subtopic.programming.architecture": "Архитектура",
+  "subtopic.programming.ithumor": "IT-Юмор",
+  "subtopic.programming.itinside": "IT-Инсайд",
+  "topic.psychology": "Психология",
+  "subtopic.psychology.self-acceptance": "Принятие себя",
+  "subtopic.psychology.triggers": "Триггеры",
+  "subtopic.psychology.relationships": "Отношения",
+  "topic.text": "Работа с текстом",
+  "subtopic.text.editing": "Редактирование",
+  "subtopic.text.translation": "Перевод",
+  "subtopic.text.copywriting": "Копирайтинг",
+  "topic.misc": "Разное",
+  "all": "Все"
+}

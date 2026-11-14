@@ -1,0 +1,11 @@
+# Android Studio and Gradle local state
+.gradle/
+**/.gradle/
+local.properties
+.idea/
+*.iml
+.DS_Store
+
+# Build outputs
+/build/
+/app/build/

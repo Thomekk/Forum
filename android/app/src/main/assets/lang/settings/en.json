@@ -1,0 +1,15 @@
+{
+  "credits": "credits",
+  "free_today": "1 free question today",
+  "free_left": "Free question available today",
+  "free_used": "Today's free question used",
+  "credit_rule": "Each additional question costs 1 credit. Each answer earns 1 credit.",
+  "no_credits": "Your free question is used. Answer someone to earn a credit.",
+  "language": "Language",
+  "language_auto": "Use device language",
+  "appearance": "Appearance",
+  "privacy": "Anonymous means pseudonymous: your node code is used to deliver private answers. Do not include identifying details in question text.",
+  "credits_local": "Credits and the daily free-question counter are stored on this device. Without accounts or a global consensus ledger they are not Sybil-proof.",
+  "credit_badge_free": "1 free",
+  "credit_badge": "cr"
+}

@@ -1,0 +1,19 @@
+{
+  "topic.all": "All",
+  "topic.programming": "Programming",
+  "subtopic.programming.bugs": "Bug fixing",
+  "subtopic.programming.review": "Code review",
+  "subtopic.programming.architecture": "Architecture",
+  "subtopic.programming.ithumor": "IT-Humor",
+  "subtopic.programming.itinside": "IT-Inside",
+  "topic.psychology": "Psychology",
+  "subtopic.psychology.self-acceptance": "Self-acceptance",
+  "subtopic.psychology.triggers": "Triggers",
+  "subtopic.psychology.relationships": "Relationships",
+  "topic.text": "Text work",
+  "subtopic.text.editing": "Editing",
+  "subtopic.text.translation": "Translation",
+  "subtopic.text.copywriting": "Copywriting",
+  "topic.misc": "Other",
+  "all": "All"
+}
