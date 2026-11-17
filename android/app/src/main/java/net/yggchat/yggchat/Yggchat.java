@@ -5,12 +5,14 @@ package net.yggchat.yggchat;
 import android.content.Context;
 import go.Seq;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 
 public final class Yggchat {
     public static final String CoreVersion = "v0.5.15";
     public static final String Version = "0.2.0";
-    public static final String DefaultPeers = "tls://box.paulll.cc:13338,tls://ygg-msk-1.averyan.ru:8362,tls://45.147.200.202:443,tls://45.95.202.21:443,quic://89.44.86.85:65535,tls://ygg.mkg20001.io:443";
 
     static {
         Seq.touch();
@@ -39,16 +41,54 @@ public final class Yggchat {
     /** Small public facade; the generated Node class remains package-private. */
     public static final class Session {
         private final Node node;
+        private final String adminSocketPath;
 
-        private Session(Node node) { this.node = node; }
+        private Session(Node node, String adminSocketPath) {
+            this.node = node;
+            this.adminSocketPath = adminSocketPath == null ? "" : adminSocketPath;
+        }
 
-        public static Session open(Context context) {
+        /** Start using the operator-configured Yggdrasil transport peers. */
+        public static Session open(Context context, String peerUris) {
+            return open(context, peerUris, "");
+        }
+
+        /** Start with the admin API restricted to a Unix socket inside this app's private files. */
+        public static Session open(Context context, String peerUris, String adminSocketPath) {
             Context app = context.getApplicationContext();
             Seq.setContext(app);
             String path = new File(app.getFilesDir(), "yggdrasil").getAbsolutePath();
             Node node = Yggchat.newNode(path);
-            node.start("");
-            return new Session(node);
+            node.setPeers(peerUris == null ? "" : peerUris);
+            String config = node.configJSON();
+            if (adminSocketPath != null && !adminSocketPath.isEmpty()) {
+                config = configuredJson(config, adminSocketPath, null);
+            }
+            node.start(config);
+            return new Session(node, adminSocketPath);
+        }
+
+        /** Advertise a signed Forum presence record through Yggdrasil NodeInfo. */
+        public synchronized void configureForumNodeInfo(JSONObject presence) {
+            if (adminSocketPath.isEmpty()) throw new IllegalStateException("Yggdrasil admin socket is not configured");
+            String config = configuredJson(node.configJSON(), adminSocketPath, presence);
+            node.restart(config);
+        }
+
+        private static String configuredJson(String raw, String adminSocketPath, JSONObject presence) {
+            try {
+                JSONObject config = new JSONObject(raw == null || raw.isEmpty() ? "{}" : raw);
+                config.put("AdminListen", "unix://" + adminSocketPath);
+                config.put("NodeInfoPrivacy", true);
+                JSONObject info = config.optJSONObject("NodeInfo");
+                if (info == null) info = new JSONObject();
+                if (presence == null) info.remove("anonymous-forum");
+                else info.put("anonymous-forum", presence);
+                config.put("NodeInfo", info);
+                return config.toString();
+            } catch (JSONException error) {
+                throw new IllegalStateException("Could not configure the Yggdrasil admin socket and NodeInfo", error);
+            }
         }
 
         public String addContactCode(String code, String nickname) {

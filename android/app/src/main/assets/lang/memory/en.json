@@ -1,6 +1,6 @@
 {
-  "memory": "Holographic shard storage",
-  "memory_hint": "YggChat splits and redundantly distributes messages; shards expire according to the node vault policy.",
+  "memory": "YggChat node shard cache",
+  "memory_hint": "This controls the native YggChat cache. Forum questions use a separate local store and best-effort direct replication among signed Forum participants.",
   "shard_size": "Shard size",
   "redundancy": "Redundancy",
   "fanout": "Fan-out",

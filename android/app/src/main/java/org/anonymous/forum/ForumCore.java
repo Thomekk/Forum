@@ -34,7 +34,6 @@ public final class ForumCore {
     private static final int MAX_QUESTIONS = 1000;
     private static final int MAX_OUTBOX = 256;
     private static final int MAX_SEEN = 3000;
-    private static final int MAX_PEERS = 64;
     private static final Object LOCK = new Object();
 
     private final SharedPreferences prefs;
@@ -177,7 +176,7 @@ public final class ForumCore {
         }
     }
 
-    /** Store the local anonymous contact code and attach it to questions still in the outbox. */
+    /** Store the local public return address and attach it to questions still in the outbox. */
     public void setMyCode(String code) {
         String value = code == null ? "" : code.trim();
         if (value.length() > 4096) return;
@@ -236,6 +235,7 @@ public final class ForumCore {
             put(notice, "id", "n-" + answerId); put(notice, "answerId", answerId);
             put(notice, "questionId", questionId); put(notice, "answererId", user);
             put(notice, "answererName", answerer); put(notice, "createdAt", now);
+            put(notice, "expiresAt", now + UNANSWERED_TTL_MS);
 
             JSONArray answered = array(root, "answeredQuestionIds");
             answered.put(questionId);
@@ -250,8 +250,9 @@ public final class ForumCore {
     }
 
     /**
-     * Apply a new event received in a YggChat thread. Public events are queued for
-     * gossip to the rest of the known mesh; answer bodies are never relayed.
+     * Apply a new event after the network adapter has authenticated its Forum envelope.
+     * Accepted public events are queued for best-effort local gossip; private answer bodies
+     * are stored only for their question owner and are never relayed.
      */
     public boolean receiveEvent(JSONObject event, String fromPeer) {
         if (event == null || !APP_ID.equals(event.optString("app")) || event.optInt("v", 0) != 1) return false;
@@ -291,23 +292,30 @@ public final class ForumCore {
                     JSONArray questions = array(root, "questions");
                     prepend(questions, q);
                     trimQuestions(questions);
-                    applyOrphanNotices(root, q);
+                    applyOrphanNotices(root, q, now);
                     accepted = true;
                 }
             } else if ("answer_notice".equals(type)) {
                 String qid = event.optString("questionId", "");
                 String answerId = bounded(event.optString("answerId", eventId), 160);
+                long created = event.optLong("createdAt", now);
+                if (created > now + 5L * 60L * 1000L) created = now;
+                long deadline = Math.min(event.optLong("expiresAt", created + UNANSWERED_TTL_MS),
+                        created + UNANSWERED_TTL_MS);
                 JSONObject q = findQuestion(root, qid);
-                if (q != null) {
+                if (deadline > now && q != null) {
                     JSONArray ids = array(q, "answerIds");
                     if (!contains(ids, answerId)) {
                         addAnswerId(q, answerId);
                         accepted = true;
                     }
-                } else if (!qid.isEmpty()) {
+                } else if (deadline > now && !qid.isEmpty()) {
                     JSONArray orphans = array(root, "orphanNotices");
                     if (!containsObjectString(orphans, "answerId", answerId) && orphans.length() < 500) {
-                        orphans.put(copy(event));
+                        JSONObject boundedNotice = copy(event);
+                        put(boundedNotice, "createdAt", created);
+                        put(boundedNotice, "expiresAt", deadline);
+                        orphans.put(boundedNotice);
                         accepted = true;
                     }
                 }
@@ -372,39 +380,6 @@ public final class ForumCore {
         }
     }
 
-    public List<String> peerCodes() {
-        synchronized (LOCK) {
-            JSONArray array = array(read(), "peerCodes");
-            ArrayList<String> result = new ArrayList<>();
-            for (int i = 0; i < array.length(); i++) {
-                String code = array.optString(i, "").trim();
-                if (!code.isEmpty()) result.add(code);
-            }
-            return Collections.unmodifiableList(result);
-        }
-    }
-
-    public boolean addPeerCode(String rawCode) throws RuleException {
-        String code = rawCode == null ? "" : rawCode.trim();
-        if (code.length() < 8 || code.length() > 4096) throw new RuleException("INVALID_PEER_CODE");
-        synchronized (LOCK) {
-            JSONObject root = read();
-            JSONArray codes = array(root, "peerCodes");
-            for (int i = 0; i < codes.length(); i++) if (code.equals(codes.optString(i))) return false;
-            if (codes.length() >= MAX_PEERS) throw new RuleException("PEER_LIMIT");
-            codes.put(code);
-            write(root);
-            return true;
-        }
-    }
-
-    public String myCode() {
-        synchronized (LOCK) { return read().optString("myCode", ""); }
-    }
-
-    public int pendingCount() {
-        synchronized (LOCK) { return array(read(), "outbox").length(); }
-    }
 
     public void expireNow() {
         synchronized (LOCK) {
@@ -432,7 +407,7 @@ public final class ForumCore {
         if (root.optJSONArray("outbox") == null) put(root, "outbox", new JSONArray());
         if (root.optJSONArray("seenEventIds") == null) put(root, "seenEventIds", new JSONArray());
         if (root.optJSONArray("answeredQuestionIds") == null) put(root, "answeredQuestionIds", new JSONArray());
-        if (root.optJSONArray("peerCodes") == null) put(root, "peerCodes", new JSONArray());
+        root.remove("peerCodes"); // migration: manual contact lists are no longer part of forum state
         if (root.optJSONArray("orphanNotices") == null) put(root, "orphanNotices", new JSONArray());
         if (root.optString("myCode", "").length() > 4096) put(root, "myCode", "");
     }
@@ -462,13 +437,22 @@ public final class ForumCore {
                 questions.remove(i);
             }
         }
-        if (!removed.isEmpty()) {
-            JSONArray outbox = array(root, "outbox");
-            for (int i = outbox.length() - 1; i >= 0; i--) {
-                JSONObject item = outbox.optJSONObject(i);
-                JSONObject event = item == null ? null : item.optJSONObject("event");
-                if (event != null && "question".equals(event.optString("type")) && removed.contains(event.optString("questionId"))) outbox.remove(i);
-            }
+        JSONArray outbox = array(root, "outbox");
+        for (int i = outbox.length() - 1; i >= 0; i--) {
+            JSONObject item = outbox.optJSONObject(i);
+            JSONObject event = item == null ? null : item.optJSONObject("event");
+            if (event == null) { outbox.remove(i); continue; }
+            boolean expiredEvent = event.optLong("expiresAt", Long.MAX_VALUE) <= now;
+            boolean removedQuestion = "question".equals(event.optString("type"))
+                    && removed.contains(event.optString("questionId"));
+            if (expiredEvent || removedQuestion) outbox.remove(i);
+        }
+        JSONArray orphans = array(root, "orphanNotices");
+        for (int i = orphans.length() - 1; i >= 0; i--) {
+            JSONObject notice = orphans.optJSONObject(i);
+            long deadline = notice == null ? 0L : notice.optLong("expiresAt",
+                    notice.optLong("createdAt", now) + UNANSWERED_TTL_MS);
+            if (notice == null || deadline <= now) orphans.remove(i);
         }
         trimQuestions(questions);
     }
@@ -502,11 +486,15 @@ public final class ForumCore {
         put(question, "answerCount", ids.length());
     }
 
-    private static void applyOrphanNotices(JSONObject root, JSONObject question) {
+    private static void applyOrphanNotices(JSONObject root, JSONObject question, long now) {
         JSONArray orphans = array(root, "orphanNotices");
         for (int i = orphans.length() - 1; i >= 0; i--) {
             JSONObject event = orphans.optJSONObject(i);
-            if (event != null && question.optString("id").equals(event.optString("questionId"))) {
+            long deadline = event == null ? 0L : event.optLong("expiresAt",
+                    event.optLong("createdAt", now) + UNANSWERED_TTL_MS);
+            if (event == null || deadline <= now) {
+                orphans.remove(i);
+            } else if (question.optString("id").equals(event.optString("questionId"))) {
                 addAnswerId(question, event.optString("answerId", event.optString("id")));
                 orphans.remove(i);
             }

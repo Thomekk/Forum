@@ -133,12 +133,12 @@ public final class Strings {
                 "your_question", "your_answer", "expired", "back", "earn_credit", "write_answer_first");
         addKeys(sections, "settings", "credits", "free_today", "free_left", "free_used", "credit_rule", "no_credits",
                 "language", "language_auto", "appearance", "privacy", "credits_local", "credit_badge_free", "credit_badge");
-        addKeys(sections, "network", "network", "contacts", "pending", "online", "connecting", "offline", "network_hint",
-                "share_code", "add_peer", "add_peer_hint", "contact_code", "copy", "copied", "peer_added", "peer_required",
-                "invalid_contact", "status_starting", "status_no_core", "status_start_failed", "status_temp_unavailable",
-                "status_contact_waiting", "status_peer_invalid", "status_peer_add_failed", "status_peer_added",
-                "status_node_add_peer", "status_node_running", "status_cache_purged", "status_purge_failed",
-                "notification_title", "notification_stop", "channel_title", "channel_description", "forum_peer", "anonymous_asker");
+        addKeys(sections, "network", "network", "online", "connecting", "offline", "network_hint",
+                "status_starting", "status_no_core", "status_start_failed", "status_temp_unavailable",
+                "status_bootstrap_missing", "status_bootstrap_invalid", "status_discovery_ready",
+                "status_discovery_unavailable", "status_presence_unavailable", "status_node_running",
+                "status_cache_purged", "status_purge_failed", "notification_title",
+                "channel_title", "channel_description", "forum_peer", "anonymous_asker");
         addKeys(sections, "memory", "memory", "memory_hint", "shard_size", "redundancy", "fanout", "vault", "ttl", "purge", "purge_confirm");
         addKeys(sections, "topics", "all");
         return Collections.unmodifiableMap(sections);

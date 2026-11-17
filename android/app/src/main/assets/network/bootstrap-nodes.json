@@ -1,0 +1,11 @@
+{
+  "source": "https://github.com/yggdrasil-network/public-peers/tree/301831252b4dbf11a22ea479f6ac26c0763d39aa/europe",
+  "sourceUpdated": "2026-11-12",
+  "peers": [
+    "tls://box.paulll.cc:13338",
+    "tls://ygg-msk-1.averyan.ru:8362",
+    "tls://yggno.de:18227",
+    "tls://dc.txlyre.website:1337",
+    "tls://yggdrasil.su:62586"
+  ]
+}
